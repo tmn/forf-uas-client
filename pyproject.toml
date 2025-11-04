@@ -7,11 +7,14 @@ requires-python = ">=3.12"
 dependencies = [
     "paho-mqtt>=2.1.0,<3",
     "python-dotenv>=1.2.1,<2",
+    "aiohttp>=3.11.11,<4",
 ]
 
 [dependency-groups]
 dev = [
     "pytest>=8.4.2,<9",
+    "pytest-asyncio>=0.24.0,<0.25",
+    "aioresponses>=0.7.7,<0.8",
 ]
 
 [project.scripts]

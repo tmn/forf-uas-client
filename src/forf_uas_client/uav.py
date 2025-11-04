@@ -54,7 +54,7 @@ class UAV:
         self.vertical_rate = vertical_rate
         self.elevation = elevation
 
-        self.last_update = datetime.now(timezone.utc)
+        self.last_updated = datetime.now(timezone.utc)
 
     def status(self) -> UAVStatus:
         """
@@ -72,7 +72,7 @@ class UAV:
             call_sign=self.call_sign,
             ground_speed=self.ground_speed,
             vertical_rate=self.vertical_rate,
-            last_update=self.last_update.timestamp(),
+            last_update=self.last_updated.timestamp(),
         )
 
     @property
