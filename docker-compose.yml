@@ -1,0 +1,7 @@
+services:
+  uas-client:
+    build: .
+    container_name: forf-uas-client
+    volumes:
+      - ./.env:/app/.env:ro
+    restart: unless-stopped
