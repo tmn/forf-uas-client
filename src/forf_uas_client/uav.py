@@ -6,7 +6,7 @@ from forf_uas_client.callsign_mapper import get_mapper
 from forf_uas_client.models.UAVStatus import UAVStatus, UAVStatusLiteral
 from forf_uas_client.utils import serial_to_id
 
-CALL_SIGN_PREFIX = "NFS"
+CALL_SIGN_PREFIX = "Norsk Folkehjelp"
 
 
 class UAV:
