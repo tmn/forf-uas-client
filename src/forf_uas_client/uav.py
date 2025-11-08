@@ -109,7 +109,7 @@ class UAV:
         ) * math.cos(dlon)
 
         initial_bearing = math.atan2(x, y)
-        bearing = (math.degrees(initial_bearing) + 360) * 360
+        bearing = (math.degrees(initial_bearing) + 360) % 360
 
         return bearing
 
