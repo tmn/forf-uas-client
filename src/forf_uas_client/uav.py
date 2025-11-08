@@ -20,6 +20,7 @@ class UAV:
         longitude: float,
         altitude: float,
         elevation: float = 0,
+        attitude_head: float = 0,
         ground_speed: float = 0,
         vertical_rate: float = 0,
     ):
@@ -38,6 +39,8 @@ class UAV:
         self.ground_speed: float = ground_speed
         self.vertical_rate: float = vertical_rate
 
+        self.attitude_head: float = attitude_head
+
         # Utils
         self.mapper = get_mapper()
 
@@ -47,6 +50,7 @@ class UAV:
         latitude: float,
         longitude: float,
         altitude: float,
+        attitude_head: float,
         ground_speed: float,
         vertical_rate: float,
         elevation: float,
@@ -54,6 +58,7 @@ class UAV:
         self.latitude = latitude
         self.longitude = longitude
         self.altitude = altitude
+        self.attitude_head = attitude_head
         self.ground_speed = ground_speed
         self.vertical_rate = vertical_rate
         self.elevation = elevation
@@ -74,6 +79,7 @@ class UAV:
             altitude=self.altitude,
             status=self.flight_status,
             call_sign=self.call_sign,
+            course=self.attitude_head,
             ground_speed=self.ground_speed,
             vertical_rate=self.vertical_rate,
             last_update=self.last_updated.timestamp(),

@@ -15,6 +15,7 @@ class UAVStatus:
     # If UAV is GROUNDED or AIRBORNE
     status: UAVStatusLiteral
 
+    course: float
     ground_speed: float
     vertical_rate: float
 

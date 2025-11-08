@@ -11,5 +11,6 @@ class UAVTelemetry(NamedTuple):
     longitude: float
     altitude: float
     elevation: float
+    attitude_head: float
     ground_speed: float
     vertical_rate: float

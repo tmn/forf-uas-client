@@ -27,6 +27,7 @@ class UAVRegistry:
         latitude: float,
         longitude: float,
         altitude: float,
+        attitude_head: float,
         ground_speed: float,
         vertical_rate: float,
         elevation: float,
@@ -51,6 +52,7 @@ class UAVRegistry:
                 latitude=latitude,
                 longitude=longitude,
                 altitude=altitude,
+                attitude_head=attitude_head,
                 ground_speed=ground_speed,
                 vertical_rate=vertical_rate,
                 elevation=elevation,
@@ -62,6 +64,7 @@ class UAVRegistry:
                 longitude=longitude,
                 altitude=altitude,
                 elevation=elevation,
+                attitude_head=attitude_head,
                 ground_speed=ground_speed,
                 vertical_rate=vertical_rate,
             )
