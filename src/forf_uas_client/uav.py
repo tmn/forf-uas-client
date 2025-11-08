@@ -99,6 +99,6 @@ class UAV:
         callsign_suffix: str | None = self.mapper.get_callsign(self.id)
 
         if callsign_suffix is None:
-            callsign_suffix = f"{serial_to_id(self.id)}"
+            return f"{CALL_SIGN_PREFIX} {serial_to_id(self.id)}"
 
-        return f"{CALL_SIGN_PREFIX} {callsign_suffix}"
+        return f"{CALL_SIGN_PREFIX} ({callsign_suffix})"
