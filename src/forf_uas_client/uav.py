@@ -1,4 +1,5 @@
 import json
+import math
 from datetime import datetime, timezone
 from typing import override
 
@@ -31,6 +32,9 @@ class UAV:
         self.elevation: float = elevation
         self.last_updated: datetime = datetime.now(timezone.utc)
 
+        self.old_latitude: float = -1
+        self.old_longitude: float = -1
+
         # Location
         self.latitude: float = latitude
         self.longitude: float = longitude
@@ -55,6 +59,11 @@ class UAV:
         vertical_rate: float,
         elevation: float,
     ):
+        # store old position
+        self.old_latitude = self.latitude
+        self.old_longitude = self.longitude
+
+        # set new values
         self.latitude = latitude
         self.longitude = longitude
         self.altitude = altitude
@@ -79,11 +88,30 @@ class UAV:
             altitude=self.altitude,
             status=self.flight_status,
             call_sign=self.call_sign,
-            course=self.attitude_head,
+            course=self.course,  # attitude_head,
             ground_speed=self.ground_speed,
             vertical_rate=self.vertical_rate,
             last_update=self.last_updated.timestamp(),
         )
+
+    @property
+    def course(self) -> float:
+        if self.old_latitude < 0 or self.old_longitude < 0:
+            return self.attitude_head
+
+        lat1_rad = math.radians(self.old_latitude)
+        lat2_rad = math.radians(self.latitude)
+        dlon = math.radians(self.longitude - self.old_longitude)
+
+        x = math.sin(dlon) * math.cos(lat2_rad)
+        y = math.cos(lat1_rad) * math.sin(lat2_rad) - math.sin(lat1_rad) * math.cos(
+            lat2_rad
+        ) * math.cos(dlon)
+
+        initial_bearing = math.atan2(x, y)
+        bearing = (math.degrees(initial_bearing) + 360) * 360
+
+        return bearing
 
     @property
     def flight_status(self) -> UAVStatusLiteral:
