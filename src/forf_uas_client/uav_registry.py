@@ -80,14 +80,14 @@ class UAVRegistry:
         """
         return self._uavs.get(serial_number)
 
-    def get_all_uavs(self) -> list[UAV]:
+    def get_all_uavs(self) -> list[str]:
         """
         Get all UAVs in the registry.
 
         Returns:
             List of all UAV instances
         """
-        return list(self._uavs.values())
+        return list(self._uavs.keys())
 
     def get_active_uavs(self, max_age_seconds: int = 30) -> list[UAV]:
         """

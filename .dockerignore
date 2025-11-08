@@ -2,6 +2,8 @@
 .env.*
 !.env.example
 
+*.db
+
 __pycache__
 .venv/
 
@@ -12,6 +14,7 @@ __pycache__
 Dockerfile
 docker-compose.yml
 .dockerignore
+
 
 .DS_Store
 

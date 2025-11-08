@@ -1,7 +1,8 @@
 import json
-from typing import override
 from datetime import datetime, timezone
+from typing import override
 
+from forf_uas_client.callsign_mapper import get_mapper
 from forf_uas_client.models.UAVStatus import UAVStatus, UAVStatusLiteral
 from forf_uas_client.utils import serial_to_id
 
@@ -37,6 +38,9 @@ class UAV:
         self.ground_speed: float = ground_speed
         self.vertical_rate: float = vertical_rate
 
+        # Utils
+        self.mapper = get_mapper()
+
     def update(
         self,
         *,
@@ -64,7 +68,7 @@ class UAV:
             UAVStatus containing current state.
         """
         return UAVStatus(
-            id=self.call_sign,
+            id=f"{serial_to_id(self.id)}",
             latitude=self.latitude,
             longitude=self.longitude,
             altitude=self.altitude,
@@ -92,4 +96,9 @@ class UAV:
     @property
     def call_sign(self) -> str:
         """Retrieve call sign from."""
-        return f"{CALL_SIGN_PREFIX}{serial_to_id(self.id)}"
+        callsign_suffix: str | None = self.mapper.get_callsign(self.id)
+
+        if callsign_suffix is None:
+            callsign_suffix = f"{serial_to_id(self.id)}"
+
+        return f"{CALL_SIGN_PREFIX} {callsign_suffix}"
