@@ -80,7 +80,7 @@ class CallsignMapper:
         conn = self._get_conn()
         return conn.execute("""
                                 SELECT * FROM uav_callsigns ORDER BY callsign
-                            """).fechall()
+                            """).fetchall()
 
 
 _mapper_instance: CallsignMapper | None = None

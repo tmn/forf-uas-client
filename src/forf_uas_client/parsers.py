@@ -22,7 +22,7 @@ handler_osd.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
 logger_osd.addHandler(handler_osd)
 
 # State logger
-logger_state = logging.getLogger("telemetry_osd")
+logger_state = logging.getLogger("telemetry_state")
 logger_state.setLevel(logging.INFO)
 
 handler_state = RotatingFileHandler(
