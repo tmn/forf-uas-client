@@ -3,7 +3,7 @@ from typing import NamedTuple
 
 class UAVTelemetry(NamedTuple):
     """
-    Parsed UAV telemetry data from OSD message.
+    Parsed UAV telemetry data.
     """
 
     serial_number: str

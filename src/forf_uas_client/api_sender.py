@@ -112,6 +112,7 @@ class APISender:
         """
         while self._running:
             try:
+                self._registry.remove_inactive_uavs()
                 await self.send_updates()
             except Exception as e:
                 logger.error(f"Error in update loop: {e}", exc_info=True)

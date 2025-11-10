@@ -1,6 +1,6 @@
+import json
 import logging
 from logging.handlers import RotatingFileHandler
-import json
 from pathlib import Path
 
 from forf_uas_client.models.UAVTelemetry import UAVTelemetry
@@ -8,6 +8,8 @@ from forf_uas_client.uav_registry import UAVRegistry
 
 OUTPUT_DIR = Path("/app/data") / "logs"
 
+
+# OSD Logger
 logger_osd = logging.getLogger("telemetry_osd")
 logger_osd.setLevel(logging.INFO)
 
@@ -19,6 +21,7 @@ handler_osd = RotatingFileHandler(
 handler_osd.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
 logger_osd.addHandler(handler_osd)
 
+# State logger
 logger_state = logging.getLogger("telemetry_osd")
 logger_state.setLevel(logging.INFO)
 
@@ -64,7 +67,7 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry, output_file: Path):
         registry: UAVRegistry to update
         output_file: Path to log file
     """
-    write_data_to_file(output_file, payload, logger_osd)
+    write_data_to_file(payload, logger_osd)
 
     try:
         res = json.loads(payload)
@@ -89,8 +92,6 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry, output_file: Path):
         elevation=telemetry.elevation,
     )
 
-    print(registry.get_all_uavs())
-
 
 def on_state_message(payload: bytes, *, output_file: Path):
     """
@@ -100,22 +101,21 @@ def on_state_message(payload: bytes, *, output_file: Path):
         payload: Raw MQTT message payload
         output_file: Path to log file
     """
-    write_data_to_file(output_file, payload, logger_state)
-    print(payload.decode("utf-8"))
+    write_data_to_file(payload, logger_state)
 
 
-def write_data_to_file(output_file: Path, payload: bytes, logger):
+def write_data_to_file(payload: bytes, log: logging.Logger) -> None:
     """
     Append payload to output file.
 
     Args:
         output_file: Path to log file
-        payload: Raw bytes to write
+        log: A logger object
     """
     try:
         json_obj = json.loads(payload.decode("utf-8"))
         compact_json = json.dumps(json_obj, separators=(",", ":"))
-        logger_osd.info(compact_json)
+        log.info(compact_json)
     except Exception as e:
         print(f"Something went wrong: {e}")
 
@@ -125,14 +125,16 @@ def _is_uav(data: dict, host: dict) -> bool:
     Check if message is from a UAV.
 
     Args:
+        data: Data dictionary from parsed message
         host: Host data dictionary from parsed message
 
     Returns:
-        True if message contains UAV telemetry fields
+        True if message contains UAV telemetry fields, else False.
     """
     try:
-        has_speed = "horizontal_speed" in host or "vertical_speed" in host
+        has_location = "latitude" in host or "longitude" in host
         has_serialnumber = bool(data.get("sn"))
-        return has_speed and has_serialnumber
+        has_speed = "horizontal_speed" in host or "vertical_speed" in host
+        return has_location and has_speed and has_serialnumber
     except (KeyError, TypeError):
         return False

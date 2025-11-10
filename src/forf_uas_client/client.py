@@ -2,20 +2,17 @@ import asyncio
 import logging
 import os
 import threading
-from pathlib import Path
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 
 from forf_uas_client.api_sender import APISender
-from forf_uas_client.parsers import on_osd_message, on_state_message
+from forf_uas_client.parsers import OUTPUT_DIR, on_osd_message, on_state_message
 from forf_uas_client.uav_registry import UAVRegistry
 
 load_dotenv()
 
 logger = logging.getLogger(__name__)
-
-OUTPUT_DIR = Path.home() / ".forf/output"
 
 
 class UASClient:

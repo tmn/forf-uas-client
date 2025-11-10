@@ -96,6 +96,9 @@ class UAV:
 
     @property
     def course(self) -> float:
+        """
+        Calculate the UAV bearing based on two last coordinates.
+        """
         if self.old_latitude < 0 or self.old_longitude < 0:
             return self.attitude_head
 
@@ -123,10 +126,6 @@ class UAV:
         """
         return "AIRBORNE" if self.elevation > 0 else "GROUNDED"
 
-    @override
-    def __str__(self):
-        return json.dumps(self.status().to_json(), indent=4)
-
     @property
     def call_sign(self) -> str:
         """Retrieve call sign from."""
@@ -136,3 +135,7 @@ class UAV:
             return f"{CALL_SIGN_PREFIX} {serial_to_id(self.id)}"
 
         return f"{CALL_SIGN_PREFIX} ({callsign_suffix})"
+
+    @override
+    def __str__(self):
+        return json.dumps(self.status().to_json(), indent=4)

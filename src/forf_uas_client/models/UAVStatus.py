@@ -6,13 +6,16 @@ UAVStatusLiteral = Literal["GROUNDED", "AIRBORNE"]
 
 @dataclasses.dataclass
 class UAVStatus:
+    """
+    Status message of UAV Telemetry data.
+    """
+
     id: str
     call_sign: str
     latitude: float
     longitude: float
-    altitude: float  # height
+    altitude: float
 
-    # If UAV is GROUNDED or AIRBORNE
     status: UAVStatusLiteral
 
     course: float

@@ -88,7 +88,7 @@ class UAVRegistry:
         Get all UAVs in the registry.
 
         Returns:
-            List of all UAV instances
+            List of all UAV IDs.
         """
         return list(self._uavs.keys())
 
