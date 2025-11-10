@@ -8,6 +8,8 @@ from forf_uas_client.uav_registry import UAVRegistry
 
 OUTPUT_DIR = Path("/app/data") / "logs"
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # OSD Logger
 logger_osd = logging.getLogger("telemetry_osd")
@@ -15,7 +17,7 @@ logger_osd.setLevel(logging.INFO)
 
 handler_osd = RotatingFileHandler(
     OUTPUT_DIR / "osd.log",
-    maxBytes=250 * 1025 * 1025,
+    maxBytes=250 * 1024 * 1024,
     backupCount=5,
 )
 handler_osd.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
@@ -27,11 +29,15 @@ logger_state.setLevel(logging.INFO)
 
 handler_state = RotatingFileHandler(
     OUTPUT_DIR / "state.log",
-    maxBytes=250 * 1025 * 1025,
+    maxBytes=250 * 1024 * 1024,
     backupCount=5,
 )
 handler_state.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
 logger_state.addHandler(handler_state)
+
+
+class ParserError(Exception):
+    pass
 
 
 def parse_osd_message(data: dict, host: dict) -> UAVTelemetry:
@@ -73,8 +79,8 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry, output_file: Path):
         res = json.loads(payload)
         data = res.get("data", {})
         host = data.get("host", {})
-    except (json.JSONDecodeError, KeyError):
-        raise Exception("Unable to read message.")
+    except (json.JSONDecodeError, KeyError) as e:
+        raise ParserError("Unable to read message.") from e
 
     if not _is_uav(data, host):
         return
@@ -117,7 +123,7 @@ def write_data_to_file(payload: bytes, log: logging.Logger) -> None:
         compact_json = json.dumps(json_obj, separators=(",", ":"))
         log.info(compact_json)
     except Exception as e:
-        print(f"Something went wrong: {e}")
+        logger.error(f"Something went wrong: {e}")
 
 
 def _is_uav(data: dict, host: dict) -> bool:

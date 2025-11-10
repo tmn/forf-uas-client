@@ -3,7 +3,7 @@ import math
 from datetime import datetime, timezone
 from typing import override
 
-from forf_uas_client.callsign_mapper import get_mapper
+from forf_uas_client.callsign_mapper import CallsignMapper, get_mapper
 from forf_uas_client.models.UAVStatus import UAVStatus, UAVStatusLiteral
 from forf_uas_client.utils import serial_to_id
 
@@ -24,6 +24,7 @@ class UAV:
         attitude_head: float = 0,
         ground_speed: float = 0,
         vertical_rate: float = 0,
+        mapper: CallsignMapper | None = None,
     ):
         self.id: str = id
 
@@ -46,7 +47,7 @@ class UAV:
         self.attitude_head: float = attitude_head
 
         # Utils
-        self.mapper = get_mapper()
+        self.mapper = mapper or get_mapper()
 
     def update(
         self,

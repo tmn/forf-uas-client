@@ -1,3 +1,4 @@
+import logging
 import os
 import sqlite3
 import threading
@@ -23,6 +24,9 @@ class CallsignMapper:
         self._local = threading.local()
         self._init_db()
 
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+
     def _init_db(self):
         with sqlite3.connect(self.db) as conn:
             conn.execute("""
@@ -38,9 +42,7 @@ class CallsignMapper:
 
     def _get_conn(self):
         if not hasattr(self._local, "conn"):
-            self._local.conn = sqlite3.connect(
-                self.db, check_same_thread=False, timeout=10.0
-            )
+            self._local.conn = sqlite3.connect(self.db, timeout=10.0)
             self._local.conn.row_factory = sqlite3.Row
 
         return self._local.conn
@@ -61,20 +63,24 @@ class CallsignMapper:
         self, serial_number: str, callsign: str, regid: str = "", notes: str = ""
     ):
         conn = self._get_conn()
-        conn.execute(
-            """
-                         INSERT INTO uav_callsigns (serial_number, callsign, regid, notes, updated_at)
-                         VALUES (?, ?, ?, ?, ?)
-                         ON CONFLICT(serial_number) DO UPDATE SET
-                             callsign = excluded.callsign,
-                             regid = excluded.regid,
-                             notes = excluded.notes,
-                             updated_at = excluded.updated_at
-                     """,
-            (serial_number, callsign, regid, notes, datetime.now()),
-        )
 
-        conn.commit()
+        try:
+            conn.execute(
+                """
+                            INSERT INTO uav_callsigns (serial_number, callsign, regid, notes, updated_at)
+                            VALUES (?, ?, ?, ?, ?)
+                            ON CONFLICT(serial_number) DO UPDATE SET
+                                callsign = excluded.callsign,
+                                regid = excluded.regid,
+                                notes = excluded.notes,
+                                updated_at = excluded.updated_at
+                        """,
+                (serial_number, callsign, regid, notes, datetime.now()),
+            )
+
+            conn.commit()
+        except sqlite3.Error as e:
+            self.logger.error(f"Database error: {e}")
 
     def list_all(self):
         conn = self._get_conn()
