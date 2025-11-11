@@ -18,7 +18,7 @@ def test_flight_status(uav: UAV):
 
 
 @pytest.fixture()
-def uav() -> Generator[UAV]:
+def uav(mock_callsign_mapper) -> Generator[UAV]:
     uav = UAV(
         id="",
         latitude=0,
@@ -27,6 +27,7 @@ def uav() -> Generator[UAV]:
         elevation=0,
         ground_speed=0,
         vertical_rate=0,
+        mapper=mock_callsign_mapper,
     )
 
     yield uav

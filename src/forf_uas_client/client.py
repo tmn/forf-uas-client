@@ -2,6 +2,7 @@ import asyncio
 import logging
 import os
 import threading
+from pathlib import Path
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
@@ -15,6 +16,10 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 
 
+class UASClientError(Exception):
+    pass
+
+
 class UASClient:
     """
     The purpose of the client is to connect to a message stream, and act
@@ -23,16 +28,26 @@ class UASClient:
 
     def __init__(
         self,
+        *,
         registry: UAVRegistry | None = None,
         enable_api_sender: bool = True,
         api_base_url: str | None = None,
         api_key: str | None = None,
         api_update_interval: float = 1.0,
     ) -> None:
+        # Check and fail if username or password is not set
+        username = os.environ.get("USERNAME", None)
+        password = os.environ.get("PASSWORD", None)
+
+        if username is None:
+            raise UASClientError("No username is specified.")
+
+        if password is None:
+            raise UASClientError("No password is specified.")
+
+        # Start client
         self._client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
-        self._client.username_pw_set(
-            os.environ.get("USERNAME", ""), os.environ.get("PASSWORD", "")
-        )
+        self._client.username_pw_set(username, password)
 
         self._client.on_connect = self.on_connect
         self._client.on_message = self.on_message
@@ -101,7 +116,6 @@ class UASClient:
 
             try:
                 self._api_loop.run_until_complete(self._api_sender.start())
-                # Keep loop running
                 self._api_loop.run_forever()
             except Exception as e:
                 logger.error(f"Error in API sender thread: {e}", exc_info=True)

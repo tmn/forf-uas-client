@@ -1,3 +1,4 @@
+from forf_uas_client.models.UAVTelemetry import UAVTelemetry
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -16,60 +17,44 @@ class UAVRegistry:
     - Support future callsign mapping from Luftfartstilsynet
     """
 
-    def __init__(self):
+    def __init__(self, mapper=None):
         self._uavs: dict[str, UAV] = {}
-        self._callsign_map: dict[str, str] = {}  # serial -> official callsign
+        self._mapper = mapper  # Optional callsign mapper for dependency injection
 
-    def update_uav(
-        self,
-        *,
-        serial_number: str,
-        latitude: float,
-        longitude: float,
-        altitude: float,
-        attitude_head: float,
-        ground_speed: float,
-        vertical_rate: float,
-        elevation: float,
-    ) -> UAV:
+    def update_uav(self, *, telemetry: UAVTelemetry) -> UAV:
         """
         Update existing UAV or create a new one.
 
         Args:
-            serial_number: UAV serial number (unique identifier)
-            latitude: Geographic latitude
-            longitude: Geographic longitude
-            altitude: Height above sea level
-            ground_speed: Horizontal velocity
-            vertical_rate: Vertical velocity
-            elevation: Height above ground level
+            telemetry: UAVTelemetry object.
 
         Returns:
             The updated or newly created UAV instance
         """
-        if serial_number in self._uavs:
-            self._uavs[serial_number].update(
-                latitude=latitude,
-                longitude=longitude,
-                altitude=altitude,
-                attitude_head=attitude_head,
-                ground_speed=ground_speed,
-                vertical_rate=vertical_rate,
-                elevation=elevation,
+        if telemetry.serial_number in self._uavs:
+            self._uavs[telemetry.serial_number].update(
+                latitude=telemetry.latitude,
+                longitude=telemetry.longitude,
+                altitude=telemetry.height,
+                attitude_head=telemetry.attitude_head,
+                ground_speed=telemetry.horizontal_speed,
+                vertical_rate=telemetry.vertical_speed,
+                elevation=telemetry.elevation,
             )
         else:
-            self._uavs[serial_number] = UAV(
-                id=serial_number,
-                latitude=latitude,
-                longitude=longitude,
-                altitude=altitude,
-                elevation=elevation,
-                attitude_head=attitude_head,
-                ground_speed=ground_speed,
-                vertical_rate=vertical_rate,
+            self._uavs[telemetry.serial_number] = UAV(
+                id=telemetry.serial_number,
+                latitude=telemetry.latitude,
+                longitude=telemetry.longitude,
+                altitude=telemetry.height,
+                elevation=telemetry.elevation,
+                attitude_head=telemetry.attitude_head,
+                ground_speed=telemetry.horizontal_speed,
+                vertical_rate=telemetry.vertical_speed,
+                mapper=self._mapper,
             )
 
-        return self._uavs[serial_number]
+        return self._uavs[telemetry.serial_number]
 
     def get_uav(self, serial_number: str) -> UAV | None:
         """
@@ -82,15 +67,6 @@ class UAVRegistry:
             UAV instance or None if not found
         """
         return self._uavs.get(serial_number)
-
-    def get_all_uavs(self) -> list[str]:
-        """
-        Get all UAVs in the registry.
-
-        Returns:
-            List of all UAV IDs.
-        """
-        return list(self._uavs.keys())
 
     def get_active_uavs(self, max_age_seconds: int = 30) -> list[UAV]:
         """
@@ -134,28 +110,6 @@ class UAVRegistry:
             del self._uavs[serial]
 
         return len(to_remove)
-
-    def load_callsign_mapping(self, filepath: Path):
-        """
-        Load official callsign mapping.
-
-        Args:
-            filepath: Path to callsign mapping file (CSV or JSON)
-        """
-        # TODO: Implement when data format is known
-        raise NotImplementedError("Callsign mapping not yet implemented")
-
-    def get_callsign(self, serial_number: str) -> str | None:
-        """
-        Get official callsign for a UAV if available.
-
-        Args:
-            serial_number: UAV serial number
-
-        Returns:
-            Official callsign or None if not mapped
-        """
-        return self._callsign_map.get(serial_number)
 
     def __len__(self) -> int:
         """Return number of UAVs in registry."""

@@ -9,8 +9,8 @@ class UAVTelemetry(NamedTuple):
     serial_number: str
     latitude: float
     longitude: float
-    altitude: float
+    height: float
     elevation: float
     attitude_head: float
-    ground_speed: float
-    vertical_rate: float
+    horizontal_speed: float
+    vertical_speed: float

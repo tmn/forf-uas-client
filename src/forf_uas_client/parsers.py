@@ -6,7 +6,15 @@ from pathlib import Path
 from forf_uas_client.models.UAVTelemetry import UAVTelemetry
 from forf_uas_client.uav_registry import UAVRegistry
 
-OUTPUT_DIR = Path("/app/data") / "logs"
+OUTPUT_DIR: Path = Path("/app/data") / "logs"
+
+# Create output directory if it doesn't exist
+try:
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+except (OSError, PermissionError):
+    # Fall back to local directory if /app is not writable (e.g., in tests)
+    OUTPUT_DIR = Path("data") / "logs"
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -40,26 +48,39 @@ class ParserError(Exception):
     pass
 
 
-def parse_osd_message(data: dict, host: dict) -> UAVTelemetry:
+def parse_osd_message(data: dict, host: dict) -> UAVTelemetry | None:
     """
-    Parse OSD message and extract UAV telemetry data.
+    Parse and extract UAV telemetry data.
 
     Args:
-        data: dict...
-        host: dict...
+        data: dict from osd message
+        host: dict form data object on the osd message
 
     Returns:
         UAVTelemetry if message contains valid UAV data
     """
+    required_fields: list[str] = [
+        "latitude",
+        "longitude",
+        "height",
+        "attitude_head",
+        "horizontal_speed",
+        "vertical_speed",
+        "elevation",
+    ]
+
+    if not all(field in host for field in required_fields):
+        logger_osd.warning("Missing required fields in OSD message.")
+        return None
 
     return UAVTelemetry(
         serial_number=data.get("sn", ""),
         latitude=host.get("latitude", 0.0),
         longitude=host.get("longitude", 0.0),
-        altitude=host.get("height", 0.0),
+        height=host.get("height", 0.0),
         attitude_head=host.get("attitude_head", 0),
-        ground_speed=host.get("horizontal_speed", 0.0),
-        vertical_rate=host.get("vertical_speed", 0.0),
+        horizontal_speed=host.get("horizontal_speed", 0.0),
+        vertical_speed=host.get("vertical_speed", 0.0),
         elevation=host.get("elevation", 0.0),
     )
 
@@ -85,18 +106,9 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry, output_file: Path):
     if not _is_uav(data, host):
         return
 
-    telemetry: UAVTelemetry = parse_osd_message(data, host)
-
-    registry.update_uav(
-        serial_number=telemetry.serial_number,
-        latitude=telemetry.latitude,
-        longitude=telemetry.longitude,
-        altitude=telemetry.altitude,
-        attitude_head=telemetry.attitude_head,
-        ground_speed=telemetry.ground_speed,
-        vertical_rate=telemetry.vertical_rate,
-        elevation=telemetry.elevation,
-    )
+    telemetry: UAVTelemetry | None = parse_osd_message(data, host)
+    if telemetry is not None:
+        registry.update_uav(telemetry=telemetry)
 
 
 def on_state_message(payload: bytes, *, output_file: Path):
