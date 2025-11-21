@@ -1,8 +1,7 @@
-from forf_uas_client.models.UAVTelemetry import UAVTelemetry
 from datetime import datetime, timezone
-from pathlib import Path
 
-from forf_uas_client.uav import UAV
+from forf_uas_client.models.uav import UAV
+from forf_uas_client.models.UAVTelemetry import UAVTelemetry
 
 
 class UAVRegistry:
@@ -14,7 +13,6 @@ class UAVRegistry:
     - Update existing UAVs or create new ones
     - Track last seen times
     - Filter active UAVs based on age
-    - Support future callsign mapping from Luftfartstilsynet
     """
 
     def __init__(self, mapper=None):
@@ -32,18 +30,10 @@ class UAVRegistry:
             The updated or newly created UAV instance
         """
         if telemetry.serial_number in self._uavs:
-            self._uavs[telemetry.serial_number].update(
-                latitude=telemetry.latitude,
-                longitude=telemetry.longitude,
-                altitude=telemetry.height,
-                attitude_head=telemetry.attitude_head,
-                ground_speed=telemetry.horizontal_speed,
-                vertical_rate=telemetry.vertical_speed,
-                elevation=telemetry.elevation,
-            )
+            self._uavs[telemetry.serial_number].update(telemetry=telemetry)
         else:
             self._uavs[telemetry.serial_number] = UAV(
-                id=telemetry.serial_number,
+                sn=telemetry.serial_number,
                 latitude=telemetry.latitude,
                 longitude=telemetry.longitude,
                 altitude=telemetry.height,
@@ -83,6 +73,7 @@ class UAVRegistry:
 
         for uav in self._uavs.values():
             age = (now - uav.last_updated).total_seconds()
+
             if age <= max_age_seconds:
                 active.append(uav)
 

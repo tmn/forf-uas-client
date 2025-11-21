@@ -16,9 +16,6 @@ class APISenderError(Exception):
 class APISender:
     """
     Sends UAV position updates to external API on a periodic schedule.
-
-    This class runs in the background and sends the latest UAV positions
-    to the API at configurable intervals.
     """
 
     def __init__(
@@ -59,9 +56,7 @@ class APISender:
 
     async def start(self):
         """
-        Start API Sender periodic task.
-
-        This creates a background task that sends updates at the configured interval.
+        Create background task and start API Sender periodic task.
         """
         if self._running:
             logger.warning("APISender is already running")
@@ -144,7 +139,9 @@ class APISender:
         success = await self._send_bulk_update(uav_list)
 
         if success:
-            logger.info(f"Successfully sent bulk update for {len(active_uavs)} UAVs")
+            logger.info(
+                f"Successfully sent bulk update for {len(active_uavs)} UAVs: {', '.join([uav.call_sign for uav in active_uavs])}"
+            )
         else:
             logger.error(f"Failed to send bulk update for {len(active_uavs)} UAVs")
 
@@ -192,10 +189,6 @@ class APISender:
             logger.error(f"Unexpected error sending bulk update: {e}", exc_info=True)
             return False
 
-    def is_running(self) -> bool:
-        """Check if the sender is currently running."""
-        return self._running
-
     @property
     def update_interval(self) -> float:
         """Get the current update interval."""
@@ -206,5 +199,6 @@ class APISender:
         """Set a new update interval (takes effect on next cycle)."""
         if value <= 0:
             raise ValueError("Update interval must be positive")
+
         self._update_interval = value
         logger.info(f"Update interval changed to {value}s")

@@ -1,11 +1,12 @@
 import json
 import math
+import hashlib
 from datetime import datetime, timezone
 from typing import override
 
 from forf_uas_client.callsign_mapper import CallsignMapper, get_mapper
 from forf_uas_client.models.UAVStatus import UAVStatus, UAVStatusLiteral
-from forf_uas_client.utils import serial_to_id
+from forf_uas_client.models.UAVTelemetry import UAVTelemetry
 
 CALL_SIGN_PREFIX = "Norsk Folkehjelp"
 
@@ -16,7 +17,7 @@ class UAV:
     def __init__(
         self,
         *,
-        id: str,
+        sn: str,
         latitude: float,
         longitude: float,
         altitude: float,
@@ -26,7 +27,7 @@ class UAV:
         vertical_rate: float = 0,
         mapper: CallsignMapper | None = None,
     ):
-        self.id: str = id
+        self.sn = sn
 
         # Metadata
         self.altitude: float = altitude
@@ -49,29 +50,19 @@ class UAV:
         # Utils
         self.mapper = mapper or get_mapper()
 
-    def update(
-        self,
-        *,
-        latitude: float,
-        longitude: float,
-        altitude: float,
-        attitude_head: float,
-        ground_speed: float,
-        vertical_rate: float,
-        elevation: float,
-    ):
+    def update(self, *, telemetry: UAVTelemetry):
         # store old position
         self.old_latitude = self.latitude
         self.old_longitude = self.longitude
 
         # set new values
-        self.latitude = latitude
-        self.longitude = longitude
-        self.altitude = altitude
-        self.attitude_head = attitude_head
-        self.ground_speed = ground_speed
-        self.vertical_rate = vertical_rate
-        self.elevation = elevation
+        self.latitude = telemetry.latitude
+        self.longitude = telemetry.longitude
+        self.altitude = telemetry.height
+        self.attitude_head = telemetry.attitude_head
+        self.ground_speed = telemetry.horizontal_speed
+        self.vertical_rate = telemetry.vertical_speed
+        self.elevation = telemetry.elevation
 
         self.last_updated = datetime.now(timezone.utc)
 
@@ -83,17 +74,23 @@ class UAV:
             UAVStatus containing current state.
         """
         return UAVStatus(
-            id=f"{serial_to_id(self.id)}",
+            id=f"{self.id}",
             latitude=self.latitude,
             longitude=self.longitude,
             altitude=self.altitude,
             status=self.flight_status,
             call_sign=self.call_sign,
-            course=self.course,  # attitude_head,
+            course=self.course,
             ground_speed=self.ground_speed,
             vertical_rate=self.vertical_rate,
             last_update=self.last_updated.timestamp(),
         )
+
+    @property
+    def id(self) -> int:
+        h = hashlib.sha256(self.sn.encode()).digest()
+        num = int.from_bytes(h, "big")
+        return num % 1_000_000
 
     @property
     def course(self) -> float:
@@ -130,10 +127,10 @@ class UAV:
     @property
     def call_sign(self) -> str:
         """Retrieve call sign from."""
-        callsign_suffix: str | None = self.mapper.get_callsign(self.id)
+        callsign_suffix: str | None = self.mapper.get_callsign(self.sn)
 
         if callsign_suffix is None:
-            return f"{CALL_SIGN_PREFIX} {serial_to_id(self.id)}"
+            return f"{CALL_SIGN_PREFIX} {self.id}"
 
         return f"{CALL_SIGN_PREFIX} ({callsign_suffix})"
 

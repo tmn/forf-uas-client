@@ -2,7 +2,6 @@ import asyncio
 import logging
 import os
 import threading
-from pathlib import Path
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
@@ -161,11 +160,9 @@ class UASClient:
         Handle incoming messages.
         """
         if str(msg.topic).endswith("/osd"):
-            on_osd_message(
-                msg.payload, registry=self._registry, output_file=OUTPUT_DIR / "osd.txt"
-            )
+            on_osd_message(msg.payload, registry=self._registry)
         elif str(msg.topic).endswith("/state"):
-            on_state_message(msg.payload, output_file=OUTPUT_DIR / "state.txt")
+            on_state_message(msg.payload)
 
     @property
     def client(self):

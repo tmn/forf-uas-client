@@ -44,10 +44,6 @@ handler_state.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
 logger_state.addHandler(handler_state)
 
 
-class ParserError(Exception):
-    pass
-
-
 def parse_osd_message(data: dict, host: dict) -> UAVTelemetry | None:
     """
     Parse and extract UAV telemetry data.
@@ -85,7 +81,7 @@ def parse_osd_message(data: dict, host: dict) -> UAVTelemetry | None:
     )
 
 
-def on_osd_message(payload: bytes, *, registry: UAVRegistry, output_file: Path):
+def on_osd_message(payload: bytes, *, registry: UAVRegistry):
     """
     Handle OSD message: parse, update registry, and log to file.
 
@@ -101,7 +97,8 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry, output_file: Path):
         data = res.get("data", {})
         host = data.get("host", {})
     except (json.JSONDecodeError, KeyError) as e:
-        raise ParserError("Unable to read message.") from e
+        logger_osd.error("Unable to read message")
+        return
 
     if not _is_uav(data, host):
         return
@@ -111,7 +108,7 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry, output_file: Path):
         registry.update_uav(telemetry=telemetry)
 
 
-def on_state_message(payload: bytes, *, output_file: Path):
+def on_state_message(payload: bytes):
     """
     Handle state message: log to file and print.
 
