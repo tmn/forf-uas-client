@@ -57,7 +57,7 @@ class CallsignMapper:
         if result is None:
             return None
 
-        return result["callsign"] if result["callsign"] else result["regid"][-2:]
+        return result
 
     def add_or_update(
         self, serial_number: str, callsign: str, regid: str = "", notes: str = ""
