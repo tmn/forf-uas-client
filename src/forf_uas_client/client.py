@@ -85,7 +85,7 @@ class UASClient:
             self._start_api_sender()
 
         # Connect MQTT and start blocking loop
-        self._client.connect(os.getenv("HOST", ""), 1883, 60)
+        self._client.connect(os.getenv("HOST", ""), int(os.getenv("PORT", 1884)), 60)
         try:
             self._client.loop_forever()
         finally:

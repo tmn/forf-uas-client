@@ -1,14 +1,20 @@
+import hashlib
 import json
 import math
-import hashlib
+import os
 from datetime import datetime, timezone
 from typing import override
+
+from dotenv import load_dotenv
 
 from forf_uas_client.callsign_mapper import CallsignMapper, get_mapper
 from forf_uas_client.models.UAVStatus import UAVStatus, UAVStatusLiteral
 from forf_uas_client.models.UAVTelemetry import UAVTelemetry
 
-CALL_SIGN_PREFIX = "Norsk Folkehjelp"
+load_dotenv()
+
+CALLSIGN_PREFIX = os.getenv("CALLSIGN_DEFAULT", "Norsk Folkehjelp")
+CALLSIGN_SHOW_SUFFIX = os.getenv("CALLSIGN_SHOW_SUFFIX", "False").lower() == "true"
 
 
 class UAV:
@@ -129,13 +135,16 @@ class UAV:
         """Retrieve call sign from."""
         callsign: dict[str, str] | None = self.mapper.get_callsign(self.sn)
 
+        if not CALLSIGN_SHOW_SUFFIX:
+            return CALLSIGN_PREFIX
+
         if callsign is None:
-            return f"{CALL_SIGN_PREFIX} ({self.id})"
+            return f"{CALLSIGN_PREFIX} ({self.id})"
 
         if len(callsign["callsign"]) > 0:
             return callsign["callsign"]
         else:
-            return f"{CALL_SIGN_PREFIX} ({callsign['regid'][-2:]})"
+            return f"{CALLSIGN_PREFIX} ({callsign['regid'][-2:]})"
 
     @override
     def __str__(self):
