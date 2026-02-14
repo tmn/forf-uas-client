@@ -50,7 +50,7 @@ class CallsignMapper:
     def get_callsign(self, serial_number: str):
         conn = self._get_conn()
         result = conn.execute(
-            "SELECT callsign, regid FROM uav_callsigns WHERE serial_number = ? AND active = 1",
+            "SELECT callsign, regid, notes, external FROM uav_callsigns WHERE serial_number = ? AND active = 1",
             (serial_number,),
         ).fetchone()
 

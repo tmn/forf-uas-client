@@ -135,16 +135,18 @@ class UAV:
         """Retrieve call sign from."""
         callsign: dict[str, str] | None = self.mapper.get_callsign(self.sn)
 
+        # All unknowns
+        if callsign is None:
+            return f"{CALLSIGN_PREFIX} (EKSTERN)"
+
+        # If RKHK
+        if callsign["notes"] == "RKHK":
+            return f"{CALLSIGN_PREFIX} (RODE KORS)"
+
         if not CALLSIGN_SHOW_SUFFIX:
             return CALLSIGN_PREFIX
 
-        if callsign is None:
-            return f"{CALLSIGN_PREFIX} ({self.id})"
-
-        if len(callsign["callsign"]) > 0:
-            return callsign["callsign"]
-        else:
-            return f"{CALLSIGN_PREFIX} ({callsign['regid'][-2:]})"
+        return callsign["callsign"]
 
     @override
     def __str__(self):
