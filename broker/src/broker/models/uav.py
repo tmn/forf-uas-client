@@ -1,3 +1,4 @@
+from enum import IntEnum
 import time
 import logging
 from broker.uav_api import uav_client
@@ -13,6 +14,11 @@ from broker.models.UAVTelemetry import UAVTelemetry
 
 CALLSIGN_PREFIX = os.getenv("CALLSIGN_DEFAULT", "Norsk Folkehjelp")
 CALLSIGN_SHOW_SUFFIX = os.getenv("CALLSIGN_SHOW_SUFFIX", "False").lower() == "true"
+
+
+class Organization(IntEnum):
+    NFS = 1
+    RKH = 2
 
 
 class UAV:
@@ -140,8 +146,9 @@ class UAV:
         if self._uav is None:
             return f"{CALLSIGN_PREFIX} EKSTERN"
 
-        if "RKHK" in self._uav["notes"]:
-            return f"{CALLSIGN_PREFIX} RKHK"
+        org_id = self._uav.get("organization", {}).get("id", -1)
+        if org_id == Organization.RKH:
+            return f"{CALLSIGN_PREFIX} RKH"
 
         if not CALLSIGN_SHOW_SUFFIX:
             regid = self._uav.get("regid", None)
