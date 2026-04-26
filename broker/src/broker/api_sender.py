@@ -4,7 +4,7 @@ from urllib.parse import urljoin
 
 import aiohttp
 
-from forf_uas_client.uav_registry import UAVRegistry
+from broker.uav_registry import UAVRegistry
 
 logger = logging.getLogger(__name__)
 

@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
-from forf_uas_client.models.uav import UAV
-from forf_uas_client.models.UAVTelemetry import UAVTelemetry
+from broker.models.uav import UAV
+from broker.models.UAVTelemetry import UAVTelemetry
 
 
 class UAVRegistry:
@@ -15,9 +15,8 @@ class UAVRegistry:
     - Filter active UAVs based on age
     """
 
-    def __init__(self, mapper=None):
+    def __init__(self):
         self._uavs: dict[str, UAV] = {}
-        self._mapper = mapper  # Optional callsign mapper for dependency injection
 
     def update_uav(self, *, telemetry: UAVTelemetry) -> UAV:
         """
@@ -41,7 +40,6 @@ class UAVRegistry:
                 attitude_head=telemetry.attitude_head,
                 ground_speed=telemetry.horizontal_speed,
                 vertical_rate=telemetry.vertical_speed,
-                mapper=self._mapper,
             )
 
         return self._uavs[telemetry.serial_number]

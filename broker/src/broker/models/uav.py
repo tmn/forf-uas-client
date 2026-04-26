@@ -1,3 +1,6 @@
+import time
+import logging
+from broker.uav_api import uav_client
 import hashlib
 import json
 import math
@@ -5,13 +8,8 @@ import os
 from datetime import datetime, timezone
 from typing import override
 
-from dotenv import load_dotenv
-
-from forf_uas_client.callsign_mapper import CallsignMapper, get_mapper
-from forf_uas_client.models.UAVStatus import UAVStatus, UAVStatusLiteral
-from forf_uas_client.models.UAVTelemetry import UAVTelemetry
-
-load_dotenv()
+from broker.models.UAVStatus import UAVStatus, UAVStatusLiteral
+from broker.models.UAVTelemetry import UAVTelemetry
 
 CALLSIGN_PREFIX = os.getenv("CALLSIGN_DEFAULT", "Norsk Folkehjelp")
 CALLSIGN_SHOW_SUFFIX = os.getenv("CALLSIGN_SHOW_SUFFIX", "False").lower() == "true"
@@ -31,7 +29,6 @@ class UAV:
         attitude_head: float = 0,
         ground_speed: float = 0,
         vertical_rate: float = 0,
-        mapper: CallsignMapper | None = None,
     ):
         self.sn = sn
 
@@ -53,8 +50,11 @@ class UAV:
 
         self.attitude_head: float = attitude_head
 
-        # Utils
-        self.mapper = mapper or get_mapper()
+        self.logger = logging.getLogger(__name__)
+        self.logger.setLevel(logging.INFO)
+
+        self._uav = None
+        self._last_updated = time.time()
 
     def update(self, *, telemetry: UAVTelemetry):
         # store old position
@@ -133,20 +133,21 @@ class UAV:
     @property
     def call_sign(self) -> str:
         """Retrieve call sign from."""
-        callsign: dict[str, str] | None = self.mapper.get_callsign(self.sn)
+        if self._uav is None or (time.time() - self._last_updated) > 30:
+            self._uav = uav_client.get_uav(self.sn)
+            self._last_updated = time.time()
 
-        # All unknowns
-        if callsign is None:
-            return f"{CALLSIGN_PREFIX} (EKSTERN)"
+        if self._uav is None:
+            return f"{CALLSIGN_PREFIX} EKSTERN"
 
-        # If RKHK
-        if callsign["notes"] == "RKHK":
-            return f"{CALLSIGN_PREFIX} (RODE KORS)"
+        if "RKHK" in self._uav["notes"]:
+            return f"{CALLSIGN_PREFIX} RKHK"
 
         if not CALLSIGN_SHOW_SUFFIX:
-            return CALLSIGN_PREFIX
+            regid = self._uav.get("regid", None)
+            return f"{CALLSIGN_PREFIX} {regid[-2:] if regid is not None else ''}"
 
-        return callsign["callsign"]
+        return self._uav["callsign"]
 
     @override
     def __str__(self):

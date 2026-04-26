@@ -1,30 +1,31 @@
 [project]
-name = "forf-uas-client"
+name = "forf-uas"
 version = "0.1.0"
-description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
-    "paho-mqtt>=2.1.0,<3",
-    "python-dotenv>=1.2.1,<2",
-    "aiohttp>=3.11.11,<4",
+    "aiohttp>=3.13.2",
+    "fastapi[standard]>=0.135.1",
+    "paho-mqtt>=2.1.0",
 ]
 
 [dependency-groups]
 dev = [
-    "pytest>=8.4.2,<9",
-    "pytest-asyncio>=0.24.0,<0.25",
-    "aioresponses>=0.7.7,<0.8",
+    "aioresponses>=0.7.8",
+    "pytest>=8.4.2",
+    "pytest-asyncio>=0.24.0",
 ]
 
-[project.scripts]
-service = "forf_uas_client:run.main"
+[tool.uv.sources]
+api = { workspace = true }
+broker = { workspace = true }
 
-[build-system]
-requires = ["uv_build>=0.9.0,<0.10.0"]
-build-backend = "uv_build"
+[tool.uv.workspace]
+members = [
+  "api",
+  "broker"
+]
 
 [tool.pyrefly]
 project-include = ["**/*.py*"]
-
 

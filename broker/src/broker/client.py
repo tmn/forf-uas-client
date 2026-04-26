@@ -4,13 +4,11 @@ import os
 import threading
 
 import paho.mqtt.client as mqtt
-from dotenv import load_dotenv
 
-from forf_uas_client.api_sender import APISender
-from forf_uas_client.parsers import OUTPUT_DIR, on_osd_message, on_state_message
-from forf_uas_client.uav_registry import UAVRegistry
+from broker.api_sender import APISender
+from broker.parsers import OUTPUT_DIR, on_osd_message, on_state_message
+from broker.uav_registry import UAVRegistry
 
-load_dotenv()
 
 logger = logging.getLogger(__name__)
 
@@ -35,8 +33,8 @@ class UASClient:
         api_update_interval: float = 1.0,
     ) -> None:
         # Check and fail if username or password is not set
-        username = os.environ.get("USERNAME", None)
-        password = os.environ.get("PASSWORD", None)
+        username = os.getenv("MQTT_USERNAME", None)
+        password = os.getenv("MQTT_PASSWORD", None)
 
         if username is None:
             raise UASClientError("No username is specified.")
@@ -85,7 +83,10 @@ class UASClient:
             self._start_api_sender()
 
         # Connect MQTT and start blocking loop
-        self._client.connect(os.getenv("HOST", ""), int(os.getenv("PORT", 1884)), 60)
+        # Default port is 1884 for dev-mode.
+        self._client.connect(
+            os.getenv("MQTT_HOST", ""), int(os.getenv("MQTT_PORT", 1884)), 60
+        )
         try:
             self._client.loop_forever()
         finally:
@@ -150,7 +151,7 @@ class UASClient:
         """
         print(f"Connected with res code: {reason_code}")
 
-        topics: list[str] = str(os.getenv("TOPICS")).split(",")
+        topics: list[str] = str(os.getenv("MQTT_TOPICS")).split(",")
 
         for topic in topics:
             client.subscribe(topic)

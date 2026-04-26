@@ -4,17 +4,13 @@ import sqlite3
 import threading
 from datetime import datetime
 
-from dotenv.main import load_dotenv
-
-load_dotenv()
-
 
 class CallsignMapper:
     """
     ...
     """
 
-    def __init__(self, db: str = os.environ.get("DB_PATH", "")):
+    def __init__(self, db: str = os.getenv("DB_PATH", "")):
         """
 
         Args:
@@ -92,7 +88,7 @@ class CallsignMapper:
 _mapper_instance: CallsignMapper | None = None
 
 
-def get_mapper(db: str = os.environ.get("DB_PATH", "")):
+def get_mapper(db: str = os.getenv("DB_PATH", "")):
     global _mapper_instance
     if _mapper_instance is None:
         _mapper_instance = CallsignMapper(db)

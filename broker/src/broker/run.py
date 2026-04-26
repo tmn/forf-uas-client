@@ -1,11 +1,7 @@
 import logging
 import os
-
-from dotenv import load_dotenv
-
 from .client import UASClient
 
-load_dotenv()
 
 # Setup logging
 logging.basicConfig(

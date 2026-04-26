@@ -3,8 +3,8 @@ import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 
-from forf_uas_client.models.UAVTelemetry import UAVTelemetry
-from forf_uas_client.uav_registry import UAVRegistry
+from broker.models.UAVTelemetry import UAVTelemetry
+from broker.uav_registry import UAVRegistry
 
 OUTPUT_DIR: Path = Path("/app/data") / "logs"
 

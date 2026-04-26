@@ -1,8 +1,49 @@
 services:
-  uas-client:
-    build: .
-    container_name: forf-uas-client
+  broker:
+    build: ./broker
+    container_name: forf-uas-broker
     volumes:
       - ./.env:/app/.env:ro
       - ./data:/app/data
     restart: unless-stopped
+    networks:
+      - shared_network
+
+    environment:
+      - MQTT_HOST=${MQTT_HOST}
+      - MQTT_PORT=${MQTT_PORT}
+      - MQTT_USERNAME=${MQTT_USERNAME}
+      - MQTT_PASSWORD=${MQTT_PASSWORD}
+      - MQTT_TOPICS=${MQTT_TOPICS}
+
+      - CALLSIGN_DEFAULT=${CALLSIGN_DEFAULT}
+      - CALLSIGN_SHOW_SUFFIX=${CALLSIGN_SHOW_SUFFIX}
+
+      - API_BASE_URL=${API_BASE_URL}
+      - API_KEY=${API_KEY}
+      - API_UPDATE_INTERVAL=${API_UPDATE_INTERVAL}
+      - API_ENABLED=${API_ENABLED}
+
+      - DB_PATH=${DB_PATH}
+
+  api:
+    build: ./api
+    container_name: forf-uas-api
+    restart: unless-stopped
+    # ports:
+    #   - "8000:8000"
+    networks:
+      - shared_network
+    volumes:
+      - ./api/src:/app/src
+    environment:
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_PORT=${DB_PORT}
+
+
+networks:
+  shared_network:
+    external: true
