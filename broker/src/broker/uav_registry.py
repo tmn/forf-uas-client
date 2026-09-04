@@ -35,7 +35,7 @@ class UAVRegistry:
                 sn=telemetry.serial_number,
                 latitude=telemetry.latitude,
                 longitude=telemetry.longitude,
-                altitude=telemetry.height,
+                altitude=round(telemetry.height * 0.3048),
                 elevation=telemetry.elevation,
                 attitude_head=telemetry.attitude_head,
                 ground_speed=telemetry.horizontal_speed,

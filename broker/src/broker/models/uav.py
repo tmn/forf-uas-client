@@ -70,7 +70,7 @@ class UAV:
         # set new values
         self.latitude = telemetry.latitude
         self.longitude = telemetry.longitude
-        self.altitude = telemetry.height
+        self.altitude = round(telemetry.height * 0.3048)
         self.attitude_head = telemetry.attitude_head
         self.ground_speed = telemetry.horizontal_speed
         self.vertical_rate = telemetry.vertical_speed
