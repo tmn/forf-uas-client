@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.13"
 resolution-markers = [
     "python_full_version >= '3.14'",
@@ -183,6 +183,7 @@ dependencies = [
     { name = "aiohttp" },
     { name = "httpx" },
     { name = "paho-mqtt" },
+    { name = "pygeodesy" },
 ]
 
 [package.dev-dependencies]
@@ -197,6 +198,7 @@ requires-dist = [
     { name = "aiohttp" },
     { name = "httpx", specifier = ">=0.28.1" },
     { name = "paho-mqtt" },
+    { name = "pygeodesy", specifier = ">=26.9.9" },
 ]
 
 [package.metadata.requires-dev]
@@ -488,6 +490,7 @@ dependencies = [
     { name = "aiohttp" },
     { name = "fastapi", extra = ["standard"] },
     { name = "paho-mqtt" },
+    { name = "pygeodesy" },
 ]
 
 [package.dev-dependencies]
@@ -502,6 +505,7 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.13.2" },
     { name = "fastapi", extras = ["standard"], specifier = ">=0.135.1" },
     { name = "paho-mqtt", specifier = ">=2.1.0" },
+    { name = "pygeodesy", specifier = ">=26.9.9" },
 ]
 
 [package.metadata.requires-dev]
@@ -1064,6 +1068,15 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/42/98/c8345dccdc31de4228c039a98f6467a941e39558da41c1744fbe29fa5666/pydantic_settings-2.14.0.tar.gz", hash = "sha256:24285fd4b0e0c06507dd9fdfd331ee23794305352aaec8fc4eb92d4047aeb67d", size = 235709, upload-time = "2026-04-20T13:37:40.293Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/01/dd/bebff3040138f00ae8a102d426b27349b9a49acc310fcae7f92112d867e3/pydantic_settings-2.14.0-py3-none-any.whl", hash = "sha256:fc8d5d692eb7092e43c8647c1c35a3ecd00e040fcf02ed86f4cb5458ca62182e", size = 60940, upload-time = "2026-04-20T13:37:38.586Z" },
+]
+
+[[package]]
+name = "pygeodesy"
+version = "26.9.9"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/66/59/701ab6183e0e3969d688cf3053b5182d4c4c0d34fe92dabb41dd8000f2a7/pygeodesy-26.9.9.tar.gz", hash = "sha256:0ae044acb9fe5ba254340ec83ff843bcd201aa23ce551885b1a434877ab76b13", size = 9062896, upload-time = "2026-09-08T23:09:27.942Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/ad/5b/f1e9c913485316a71f6c5d7aac1aa0b6c0f12d05b1447a52af767a2551b9/pygeodesy-26.9.9-py2.py3-none-any.whl", hash = "sha256:c555c73abbfd510277861ec4e6991c4d2fc42ec6ecf8f025ca146ff712020ea8", size = 1117457, upload-time = "2026-09-08T23:09:25.274Z" },
 ]
 
 [[package]]

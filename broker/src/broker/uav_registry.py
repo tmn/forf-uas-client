@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from broker.models.uav import UAV
 from broker.models.UAVTelemetry import UAVTelemetry
+from broker.geoid import ellipsoid_to_amsl
 
 
 class UAVRegistry:
@@ -35,7 +36,9 @@ class UAVRegistry:
                 sn=telemetry.serial_number,
                 latitude=telemetry.latitude,
                 longitude=telemetry.longitude,
-                altitude=round(telemetry.height * 0.3048),
+                altitude=round(
+                    ellipsoid_to_amsl(telemetry.height, telemetry.latitude, telemetry.longitude)
+                ),
                 elevation=telemetry.elevation,
                 attitude_head=telemetry.attitude_head,
                 ground_speed=telemetry.horizontal_speed,

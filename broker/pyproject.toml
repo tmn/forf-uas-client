@@ -8,6 +8,7 @@ dependencies = [
     "paho-mqtt",
     "aiohttp",
     "httpx>=0.28.1",
+    "pygeodesy>=26.9.9",
 ]
 
 [dependency-groups]

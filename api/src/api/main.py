@@ -1,15 +1,17 @@
-from sqlalchemy.orm import selectinload
-from sqlalchemy import ForeignKey
-from sqlalchemy.orm import relationship
-from fastapi import HTTPException
-from pydantic import ConfigDict
-from pydantic import BaseModel
 from datetime import datetime
-from sqlalchemy.orm import Mapped
-from sqlalchemy.orm import mapped_column
-from sqlalchemy.orm import DeclarativeBase
+
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, ConfigDict
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    relationship,
+    selectinload,
+)
+
 from .db import SessionLocal
-from fastapi import FastAPI
 
 app = FastAPI()
 

@@ -11,6 +11,7 @@ from typing import override
 
 from broker.models.UAVStatus import UAVStatus, UAVStatusLiteral
 from broker.models.UAVTelemetry import UAVTelemetry
+from broker.geoid import ellipsoid_to_amsl
 
 CALLSIGN_PREFIX = os.getenv("CALLSIGN_DEFAULT", "Norsk Folkehjelp")
 CALLSIGN_SHOW_SUFFIX = os.getenv("CALLSIGN_SHOW_SUFFIX", "False").lower() == "true"
@@ -70,7 +71,9 @@ class UAV:
         # set new values
         self.latitude = telemetry.latitude
         self.longitude = telemetry.longitude
-        self.altitude = round(telemetry.height * 0.3048)
+        self.altitude = round(
+            ellipsoid_to_amsl(telemetry.height, telemetry.latitude, telemetry.longitude)
+        )
         self.attitude_head = telemetry.attitude_head
         self.ground_speed = telemetry.horizontal_speed
         self.vertical_rate = telemetry.vertical_speed

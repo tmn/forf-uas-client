@@ -1,7 +1,8 @@
 import logging
 import os
-from .client import UASClient
 
+from .client import UASClient
+from .geoid import GEOID_PATH, load_geoid
 
 # Setup logging
 logging.basicConfig(
@@ -11,6 +12,9 @@ logging.basicConfig(
 
 
 def main():
+    load_geoid()
+    logging.info(f"Loaded geoid grid from {GEOID_PATH}")
+
     # Read configuration from environment
     api_enabled = os.getenv("API_ENABLED", "true").lower() == "true"
     api_base_url = os.getenv("API_BASE_URL")
