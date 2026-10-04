@@ -160,10 +160,13 @@ class UASClient:
         """
         Handle incoming messages.
         """
-        if str(msg.topic).endswith("/osd"):
-            on_osd_message(msg.payload, registry=self._registry)
-        elif str(msg.topic).endswith("/state"):
-            on_state_message(msg.payload)
+        try:
+            if str(msg.topic).endswith("/osd"):
+                on_osd_message(msg.payload, registry=self._registry)
+            elif str(msg.topic).endswith("/state"):
+                on_state_message(msg.payload)
+        except Exception:
+            logger.exception(f"Failed to handle message on {msg.topic}: {msg.payload[:500]}")
 
     @property
     def client(self):
