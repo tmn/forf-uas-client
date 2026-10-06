@@ -141,18 +141,21 @@ class UAV:
 
     @property
     def call_sign(self) -> str:
-        """Retrieve call sign from."""
+        """Retrieve call sign from UAV client."""
         if self._uav is None or (time.time() - self._last_updated) > 30:
             self._uav = uav_client.get_uav(self.sn)
             self._last_updated = time.time()
 
+        # UAV not found in register
         if self._uav is None:
             return f"{CALLSIGN_PREFIX} EKSTERN"
 
+        # Handle special case for RKH org.
         org_id = self._uav.get("organization", {}).get("id", -1)
         if org_id == Organization.RKH:
             return f"{CALLSIGN_PREFIX} RKH"
 
+        # Use NFS suffix in regid if CALLSIGN_SHOW_SUFFIX is False
         if not CALLSIGN_SHOW_SUFFIX:
             regid = self._uav.get("regid", None)
             return f"{CALLSIGN_PREFIX} {regid[-2:] if regid is not None else ''}"
