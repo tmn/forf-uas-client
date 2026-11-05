@@ -1,6 +1,8 @@
+import atexit
 import json
 import logging
-from logging.handlers import RotatingFileHandler
+import queue
+from logging.handlers import QueueHandler, QueueListener, RotatingFileHandler
 from pathlib import Path
 
 from broker.models.UAVTelemetry import UAVTelemetry
@@ -19,29 +21,45 @@ except (OSError, PermissionError):
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-# OSD Logger
-logger_osd = logging.getLogger("telemetry_osd")
-logger_osd.setLevel(logging.INFO)
+# Max number of log records buffered between the MQTT thread and the file writer.
+LOG_QUEUE_SIZE = 10_000
 
-handler_osd = RotatingFileHandler(
-    OUTPUT_DIR / "osd.log",
-    maxBytes=250 * 1024 * 1024,
-    backupCount=5,
-)
-handler_osd.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-logger_osd.addHandler(handler_osd)
 
-# State logger
-logger_state = logging.getLogger("telemetry_state")
-logger_state.setLevel(logging.INFO)
+class _DropWhenFullQueueHandler(QueueHandler):
+    """Never block (or raise in) the MQTT thread: drop the record if the writer lags."""
 
-handler_state = RotatingFileHandler(
-    OUTPUT_DIR / "state.log",
-    maxBytes=250 * 1024 * 1024,
-    backupCount=5,
-)
-handler_state.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
-logger_state.addHandler(handler_state)
+    def enqueue(self, record: logging.LogRecord) -> None:
+        try:
+            self.queue.put_nowait(record)
+        except queue.Full:
+            pass
+
+
+def _file_logger(name: str, filename: str) -> logging.Logger:
+    """
+    Create a logger that writes to a rotating file from a background thread,
+    so disk I/O never blocks the MQTT callback thread.
+    """
+    file_handler = RotatingFileHandler(
+        OUTPUT_DIR / filename,
+        maxBytes=250 * 1024 * 1024,
+        backupCount=5,
+    )
+    file_handler.setFormatter(logging.Formatter("%(asctime)s %(message)s"))
+
+    log_queue: queue.Queue = queue.Queue(maxsize=LOG_QUEUE_SIZE)
+    listener = QueueListener(log_queue, file_handler)
+    listener.start()
+    atexit.register(listener.stop)  # flush remaining records on shutdown
+
+    log = logging.getLogger(name)
+    log.setLevel(logging.INFO)
+    log.addHandler(_DropWhenFullQueueHandler(log_queue))
+    return log
+
+
+logger_osd = _file_logger("telemetry_osd", "osd.log")
+logger_state = _file_logger("telemetry_state", "state.log")
 
 
 def parse_osd_message(data: dict, host: dict) -> UAVTelemetry | None:
@@ -88,9 +106,8 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry):
     Args:
         payload: Raw MQTT message payload
         registry: UAVRegistry to update
-        output_file: Path to log file
     """
-    write_data_to_file(payload, logger_osd)
+    log_payload(payload, logger_osd)
 
     try:
         res = json.loads(payload)
@@ -110,29 +127,32 @@ def on_osd_message(payload: bytes, *, registry: UAVRegistry):
 
 def on_state_message(payload: bytes):
     """
-    Handle state message: log to file and print.
+    Handle state message: log to file.
 
     Args:
         payload: Raw MQTT message payload
-        output_file: Path to log file
     """
-    write_data_to_file(payload, logger_state)
+    log_payload(payload, logger_state)
 
 
-def write_data_to_file(payload: bytes, log: logging.Logger) -> None:
+def log_payload(payload: bytes, log: logging.Logger) -> None:
     """
-    Append payload to output file.
+    Queue the raw payload for the telemetry log file, one message per line.
+
+    The payload is not parsed or re-serialised; newlines are replaced so each
+    message stays on a single line. Writing on a background thread.
 
     Args:
-        output_file: Path to log file
-        log: A logger object
+        payload: Raw MQTT message payload
+        log: A file logger created by `_file_logger`
     """
     try:
-        json_obj = json.loads(payload.decode("utf-8"))
-        compact_json = json.dumps(json_obj, separators=(",", ":"))
-        log.info(compact_json)
-    except Exception as e:
-        logger.error(f"Something went wrong: {e}")
+        text = payload.decode("utf-8")
+    except UnicodeDecodeError as e:
+        logger.error(f"Unable to decode payload for logging: {e}")
+        return
+
+    log.info(text.replace("\r", " ").replace("\n", " "))
 
 
 def _is_uav(data: dict, host: dict) -> bool:

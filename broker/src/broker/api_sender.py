@@ -49,6 +49,10 @@ class APISender:
         self._session: aiohttp.ClientSession | None = None
         self._headers = {}
 
+        # State used to keep per-cycle success logging at DEBUG
+        self._last_active: dict[str, str] = {}  # UAV id -> call sign
+        self._last_send_ok = True
+
         if api_key:
             self._headers["x-api-key"] = api_key
         else:
@@ -128,9 +132,10 @@ class APISender:
 
         if not active_uavs:
             logger.debug("No active UAVs to send")
+            if self._last_active:
+                logger.info("No active UAVs to send")
+                self._last_active = {}
             return
-
-        logger.debug(f"Sending bulk update for {len(active_uavs)} UAVs")
 
         # Build list of UAV statuses
         uav_list = [uav.status().to_json() for uav in active_uavs]
@@ -138,12 +143,21 @@ class APISender:
         # Send as single bulk request
         success = await self._send_bulk_update(uav_list)
 
-        if success:
-            logger.info(
-                f"Successfully sent bulk update for {len(active_uavs)} UAVs: {', '.join([uav.call_sign for uav in active_uavs])}"
-            )
-        else:
+        if not success:
             logger.error(f"Failed to send bulk update for {len(active_uavs)} UAVs")
+            self._last_send_ok = False
+            return
+
+        active = {status["id"]: status["call_sign"] for status in uav_list}
+        message = f"Sent bulk update for {len(active)} UAVs: {', '.join(active.values())}"
+
+        if active != self._last_active or not self._last_send_ok:
+            logger.info(message)
+        else:
+            logger.debug(message)
+
+        self._last_active = active
+        self._last_send_ok = True
 
     async def _send_bulk_update(self, uav_list: list) -> bool:
         """
@@ -166,10 +180,6 @@ class APISender:
                 url, json=uav_list, headers=self._headers
             ) as response:
                 if response.status >= 200 and response.status < 300:
-                    logger.debug(
-                        f"Successfully sent bulk update for {len(uav_list)} UAVs "
-                        f"(status: {response.status})"
-                    )
                     return True
                 else:
                     response_text = await response.text()
